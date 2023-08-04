@@ -18,6 +18,6 @@ The 'Comparative egg clutch biomechanics and its effect on escape hatching in ph
 
 The 'MATLAB code & Vibration recordings' folder contains the script and raw vibration recording files necessary to estimate values of free vibration frequencies and rates of vibration decay in the time domain, as described in the manuscript.
 
-=====Contact Info=====
+**CONTACT INFORMATION**
 
 Please email bguell@bu.edu with any questions regarding these materials and analyses
