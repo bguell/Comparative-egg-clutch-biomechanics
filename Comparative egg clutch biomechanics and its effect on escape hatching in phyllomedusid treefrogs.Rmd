@@ -1,0 +1,1985 @@
+---
+title: "Egg-clutch biomechanics affect escape-hatching behavior: A comparison of congeneric treefrogs "
+author: "Brandon Güell"
+date: "3/15/2023"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    toc_float: yes
+---
+
+# Introduction
+
+> The data processing and statistical analyses shown here are from the Guell et al. "Egg-clutch biomechanics affect escape-hatching behavior and performance". Analyses are shows in chronological order as reported in the manuscript. We show details on importing, manipulating, summarizing, analyzing (testing hypotheses), and visualizing the data. See manuscript for details on background, research questions, hypothesis, methods, etc..
+
+
+PDF Knit settings
+```{r global_options}
+knitr::opts_chunk$set(warning=FALSE, message=FALSE)
+```
+
+# Clutch Biomechanics
+
+Import Datasheets
+
+Manual measurements
+```{r}
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(scales)
+
+biomechmeasurements <- read_excel("~/Desktop/Publications/Manuscripts/In Prep/Comparative Egg Clutch Biomechanics/Comparative Egg Clutch Biomechanics.xlsx",
+    sheet = "Manual Vibration Measurements", na = "NA")
+biomechmeasurements
+
+#subsets of data
+ringdown_only_biomechmeasurements = biomechmeasurements %>%
+  filter(Vibration_Signal_Portion == "Ringdown")
+ringdown_only_biomechmeasurements
+
+entire_disturbance_biomechmeasurements = biomechmeasurements %>%
+  filter(Vibration_Signal_Portion == "Entire disturbance")
+entire_disturbance_biomechmeasurements
+```
+
+## Egg clutch Morphology
+Table 1 summary
+```{r}
+clutch_size_sum = biomechmeasurements %>%
+  filter(Excitation_Test=="Pendulum impact" & Vibration_Signal_Portion =="Ringdown" & Impact_Distance_cm==1) %>%
+  group_by(Species) %>%
+summarise(mean = mean(Clutch_Size, na.rm=T), SE= sd(Clutch_Size, na.rm=T)/sqrt(length(Clutch_Size)), SD = sd(Clutch_Size, na.rm=T), min = min(Clutch_Size, na.rm=T), max = max(Clutch_Size, na.rm=T), sample_size_unique=n_distinct(Clutch_Size, na.rm=T), sample_size=n())
+clutch_size_sum
+
+clutch_length_sum = biomechmeasurements %>%
+  filter(Excitation_Test=="Pendulum impact" & Vibration_Signal_Portion =="Ringdown" & Impact_Distance_cm==1) %>%
+  group_by(Species) %>%
+summarise(mean = mean(Clutch_Length_mm, na.rm=T), SE= sd(Clutch_Length_mm, na.rm=T)/sqrt(length(Clutch_Length_mm)), SD = sd(Clutch_Length_mm, na.rm=T), min = min(Clutch_Length_mm, na.rm=T), max = max(Clutch_Length_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Length_mm, na.rm=T), sample_size=n())
+clutch_length_sum
+
+clutch_width_sum = biomechmeasurements %>%
+  filter(Excitation_Test=="Pendulum impact" & Vibration_Signal_Portion =="Ringdown" & Impact_Distance_cm==1) %>%
+  group_by(Species) %>%
+summarise(mean = mean(Clutch_Width_mm, na.rm=T), SE= sd(Clutch_Width_mm, na.rm=T)/sqrt(length(Clutch_Width_mm)), SD = sd(Clutch_Width_mm, na.rm=T), min = min(Clutch_Width_mm, na.rm=T), max = max(Clutch_Width_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Width_mm, na.rm=T), sample_size=n())
+clutch_width_sum
+
+clutch_thickness_sum = biomechmeasurements %>%
+  filter(Excitation_Test=="Pendulum impact" & Vibration_Signal_Portion =="Ringdown" & Impact_Distance_cm==1) %>%
+  group_by(Species) %>%
+summarise(mean = mean(Clutch_Thickness_mm, na.rm=T), SE= sd(Clutch_Thickness_mm, na.rm=T)/sqrt(length(Clutch_Thickness_mm)), SD = sd(Clutch_Thickness_mm, na.rm=T), min = min(Clutch_Thickness_mm, na.rm=T), max = max(Clutch_Thickness_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Thickness_mm, na.rm=T), sample_size=n())
+clutch_thickness_sum
+```
+
+### STATS
+
+Clutch Size
+```{r}
+clutchdata= biomechmeasurements %>%
+  group_by(Clutch, Species) %>%
+  summarise(mean = mean(Clutch_Size, na.rm=T), SE= sd(Clutch_Size, na.rm=T)/sqrt(length(Clutch_Size)), SD = sd(Clutch_Size, na.rm=T), max = max(Clutch_Size, na.rm=T), min = min(Clutch_Size, na.rm=T), sample_size_unique=n_distinct(Clutch_Size, na.rm=T), sample_size=n())
+clutchdata
+
+m=lm(mean~Species, data=clutchdata)
+hist(clutchdata$mean)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(mean~Species, data=clutchdata)
+```
+
+Welch Two Sample t-test
+
+data:  mean by Species
+*t = 2.2154, df = 30.392, p-value = 0.03436*
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+  0.5401357 13.1951584
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                   40.11765                    33.25000 
+
+
+Clutch length
+```{r}
+clutchdata2= biomechmeasurements %>%
+  group_by(Clutch, Species) %>%
+  summarise(mean = mean(Clutch_Length_mm, na.rm=T), SE= sd(Clutch_Length_mm, na.rm=T)/sqrt(length(Clutch_Length_mm)), SD = sd(Clutch_Length_mm, na.rm=T), max = max(Clutch_Length_mm, na.rm=T), min = min(Clutch_Length_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Length_mm, na.rm=T), sample_size=n())
+clutchdata2
+
+m=lm(mean~Species, data=clutchdata2)
+hist(clutchdata2$mean)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(mean~Species, data=clutchdata2)
+```
+
+Welch Two Sample t-test
+
+data:  mean by Species
+*t = 1.0203, df = 29.994, p-value = 0.3157*
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+ -2.593829  7.773241
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                   46.26471                    43.67500 
+
+
+Clutch width
+```{r}
+clutchdata3= biomechmeasurements %>%
+  group_by(Clutch, Species) %>%
+  summarise(mean = mean(Clutch_Width_mm, na.rm=T), SE= sd(Clutch_Width_mm, na.rm=T)/sqrt(length(Clutch_Width_mm)), SD = sd(Clutch_Width_mm, na.rm=T), max = max(Clutch_Width_mm, na.rm=T), min = min(Clutch_Width_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Width_mm, na.rm=T), sample_size=n())
+clutchdata3
+
+m=lm(mean~Species, data=clutchdata3)
+hist(clutchdata3$mean)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(mean~Species, data=clutchdata3)
+```
+
+Welch Two Sample t-test
+
+data:  mean by Species
+*t = 2.6378, df = 30.223, p-value = 0.01306*
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+ 0.798982 6.271606
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                   23.93529                    20.40000 
+
+
+Clutch thickness
+```{r}
+clutchdata4= biomechmeasurements %>%
+  group_by(Clutch, Species) %>%
+  summarise(mean = mean(Clutch_Thickness_mm, na.rm=T), SE= sd(Clutch_Thickness_mm, na.rm=T)/sqrt(length(Clutch_Thickness_mm)), SD = sd(Clutch_Thickness_mm, na.rm=T), max = max(Clutch_Thickness_mm, na.rm=T), min = min(Clutch_Thickness_mm, na.rm=T), sample_size_unique=n_distinct(Clutch_Thickness_mm, na.rm=T), sample_size=n())
+clutchdata4
+
+m=lm(mean~Species, data=clutchdata4)
+hist(clutchdata4$mean)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(mean~Species, data=clutchdata4)
+```
+
+Welch Two Sample t-test
+
+data:  mean by Species
+*t = 3.9847, df = 30.9, p-value = 0.0003828*
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+ 0.8046443 2.4924145
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                   9.423529                    7.775000 
+
+
+# MATLAB Model Fit
+```{r}
+library(readxl)
+library(dplyr)
+biomech <- read_excel("~/Desktop/Publications/Manuscripts/In Prep/Comparative Egg Clutch Biomechanics/Comparative Egg Clutch Biomechanics.xlsx", 
+    sheet = "Biomechanics Code Output")
+
+biomech
+
+# remove observations based on criteria - calculate outliers at 3-s.d. from mean
+biomech = biomech %>%
+  filter(NRMSE < 0.5) %>%
+  filter(Time_Constant_s < 3*sd(biomech$Time_Constant_s)) %>%
+  filter(Frequency_Hz < 3*sd(biomech$Frequency_Hz)) %>%
+  filter(Frequency_Hz > 0) %>%
+  filter(Time_Constant_s > 0) %>%
+  filter(Period_s > 0) %>%
+  filter(Time_Constant_s < 0.5) 
+biomech
+
+biomech_as_only = biomech %>%
+  filter(Species =="A. spurrelli")
+
+biomech_ac_only = biomech %>%
+  filter(Species =="A. callidryas")
+```
+
+## Model Fit Accuracy
+Table 2 Summary Statistics
+```{r}
+library(dplyr)
+biomech_summary3 = biomech %>%
+  group_by(Species, Excitation_Test) %>%
+summarise(mean = mean(Time_Between_Samples_s, na.rm=T), SE= sd(Time_Between_Samples_s, na.rm=T)/sqrt(length(Time_Between_Samples_s)), SD = sd(Time_Between_Samples_s, na.rm=T), max = max(Time_Between_Samples_s, na.rm=T), min = min(Time_Between_Samples_s, na.rm=T), sample_size_unique=n_distinct(Time_Between_Samples_s, na.rm=T), sample_size=n())
+biomech_summary3
+
+library(dplyr)
+biomech_summary6 = biomech %>%
+  group_by(Species, Excitation_Test) %>%
+summarise(mean = mean(NRMSE, na.rm=T), SE= sd(NRMSE, na.rm=T)/sqrt(length(NRMSE)), SD = sd(NRMSE, na.rm=T), max = max(NRMSE, na.rm=T), min = min(NRMSE, na.rm=T), sample_size_unique=n_distinct(NRMSE, na.rm=T), sample_size=n())
+biomech_summary6
+```
+
+Visualizations
+```{r}
+library(ggplot2)
+library(scales)
+library(lemon)
+
+biomechplot3= ggplot(biomech, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Time_Between_Samples_s)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color = "black", pch=21) +
+  labs(y="Window length (s)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black"), axis.text.x = element_blank()) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+biomechplot3
+
+biomechplot6= ggplot(biomech, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=NRMSE)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color = "black", pch=21) +
+  labs(y="NRMSE", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none", strip.background = element_blank(), strip.text = element_blank()) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+biomechplot6
+```
+
+Composite Figure S1
+```{r}
+library(gridExtra)
+library(cowplot)
+
+#  @ portrait at 7.08661 x 8.26772 max for JEB
+# 3.46x6 portrait looks good
+
+SuppFigure1 = plot_grid(biomechplot3, biomechplot6, labels = "AUTO", label_x = -.01, label_y = 1, scale =1, ncol=1, nrow = 2, label_size = 12, align = "v")
+SuppFigure1
+```
+
+
+### STATS
+
+#### Window Length
+```{r}
+library(lme4)
+library(multcomp)
+
+sup1_fullmodel = lmer(Time_Between_Samples_s~Excitation_Test*Species +  (1|Clutch), data=biomech)
+sup1_nointeraction = lmer(Time_Between_Samples_s~Excitation_Test+Species + (1|Clutch), data=biomech)
+sup1_noexcitationtest = lmer(Time_Between_Samples_s~Species + (1|Clutch), data=biomech)
+sup1_nospecies = lmer(Time_Between_Samples_s~Excitation_Test + (1|Clutch), data=biomech)
+
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(sup1_fullmodel,  sup1_nointeraction, sup1_noexcitationtest, sup1_nospecies), c("sup1_fullmodel", "sup1_nointeraction", "sup1_noexcitationtest", "sup1_nospecies")), LL = FALSE)
+
+summary(sup1_distnace)
+
+anova(sup1_fullmodel, sup1_nointeraction, test = "Chisq")
+anova(sup1_fullmodel, sup1_nospecies, test = "Chisq")
+anova(sup1_fullmodel, sup1_noexcitationtest, test = "Chisq")
+
+library(multcomp)
+summary(glht(sup1_fullmodel, linfct=mcp(Excitation_Test="Tukey")))
+```
+EFFECT OF INTERACTION:
+* **X = 13.982; p-value = 0.002929 **
+
+EFFECT OF SPECIES:
+* **X = 294.78; p-value  < 2.2e-16 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 20.567; p-value = 0.002194**
+
+	 Simultaneous Tests for General Linear Hypotheses
+
+Multiple Comparisons of Means: Tukey Contrasts
+
+
+Fit: lmer(formula = Time_Between_Samples_s ~ Excitation_Test * Species + 
+    (1 | Clutch), data = biomech)
+
+Linear Hypotheses:
+                                            Estimate Std. Error z value Pr(>|z|)    
+Pendulum impact 1 - Large water drop == 0  -0.019926   0.009743  -2.045   0.1714    
+Pendulum impact 2 - Large water drop == 0   0.022937   0.010277   2.232   0.1146    
+Small water drop - Large water drop == 0    0.006021   0.009913   0.607   0.9297    
+Pendulum impact 2 - Pendulum impact 1 == 0  0.042863   0.010401   4.121   <0.001 ***
+Small water drop - Pendulum impact 1 == 0   0.025947   0.009992   2.597   0.0466 *  
+Small water drop - Pendulum impact 2 == 0  -0.016916   0.010536  -1.606   0.3752   
+
+
+
+Within Species
+```{r}
+library(lme4)
+library(multcomp)
+#As
+sup1_fullmodel = lmer(Time_Between_Samples_s~Excitation_Test +  (1|Clutch), data=biomech_as_only)
+sup1_noexcitationtest = lmer(Time_Between_Samples_s~ + (1|Clutch), data=biomech_as_only)
+
+anova(sup1_fullmodel, sup1_noexcitationtest, test = "Chisq")
+summary(glht(sup1_fullmodel, linfct=mcp(Excitation_Test="Tukey")))
+
+
+#Ac
+sup1_fullmodel = lmer(Time_Between_Samples_s~Excitation_Test +  (1|Clutch), data=biomech_ac_only)
+sup1_noexcitationtest = lmer(Time_Between_Samples_s~ + (1|Clutch), data=biomech_ac_only)
+
+anova(sup1_fullmodel, sup1_noexcitationtest, test = "Chisq")
+
+library(multcomp)
+summary(glht(sup1_fullmodel, linfct=mcp(Excitation_Test="Tukey")))
+```
+
+A. spurrelli:
+EFFECT OF EXCITATION TYPE:
+* **X = 48.781; p-value  1.453e-10 **
+
+Pendulum impact 1 - Large water drop == 0   0.015811   0.002771   5.705  < 0.001 ***
+Pendulum impact 2 - Large water drop == 0   0.006017   0.002790   2.157  0.13547    
+Small water drop - Large water drop == 0   -0.002680   0.002822  -0.950  0.77785    
+Pendulum impact 2 - Pendulum impact 1 == 0 -0.009794   0.002677  -3.659  0.00137 ** 
+Small water drop - Pendulum impact 1 == 0  -0.018491   0.002741  -6.746  < 0.001 ***
+Small water drop - Pendulum impact 2 == 0  -0.008697   0.002760  -3.151  0.00884 **
+
+A. callidryas:
+EFFECT OF EXCITATION TYPE:
+* **X = 18.267; p-value  = 0.0003875 **
+
+Pendulum impact 1 - Large water drop == 0  -0.022404   0.010640  -2.106   0.1511    
+Pendulum impact 2 - Large water drop == 0   0.026850   0.011276   2.381   0.0805 .  
+Small water drop - Large water drop == 0    0.002038   0.010822   0.188   0.9976    
+Pendulum impact 2 - Pendulum impact 1 == 0  0.049254   0.011382   4.327   <0.001 ***
+Small water drop - Pendulum impact 1 == 0   0.024442   0.010920   2.238   0.1129    
+Small water drop - Pendulum impact 2 == 0  -0.024812   0.011553  -2.148   0.1382 
+
+
+
+#### NRMSE
+```{r}
+sup1b_fullmodel = lmer(NRMSE~Excitation_Test*Species +  (1|Clutch), data=biomech)
+sup1b_nointeraction = lmer(NRMSE~Excitation_Test+Species + (1|Clutch), data=biomech)
+sup1b_noexcitationtest = lmer(NRMSE~Species + (1|Clutch), data=biomech)
+sup1b_nospecies = lmer(NRMSE~Excitation_Test + (1|Clutch), data=biomech)
+
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(sup1b_fullmodel,  sup1b_nointeraction, sup1b_noexcitationtest, sup1b_nospecies), c("sup1b_fullmodel", "sup1b_nointeraction", "sup1b_noexcitationtest", "sup1b_nospecies")), LL = FALSE)
+
+anova(sup1b_fullmodel, sup1b_nointeraction, test = "Chisq")
+anova(sup1b_fullmodel, sup1b_nospecies, test = "Chisq")
+anova(sup1b_fullmodel, sup1b_noexcitationtest, test = "Chisq")
+
+library(multcomp)
+summary(glht(sup1b_fullmodel, linfct=mcp(Excitation_Test="Tukey")))
+```
+
+EFFECT OF INTERACTION:
+* **X = 8.0744; p-value = 0.0445 **
+
+EFFECT OF SPECIES:
+* **X = 39.079; p-value 6.71e-08 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 65.76; p-value = 3.017e-12 **
+
+
+
+	 Simultaneous Tests for General Linear Hypotheses
+
+Multiple Comparisons of Means: Tukey Contrasts
+
+
+Fit: lmer(formula = NRMSE ~ Excitation_Test * Species + (1 | Clutch), 
+    data = biomech)
+
+Linear Hypotheses:
+                                            Estimate Std. Error z value Pr(>|z|)    
+Pendulum impact 1 - Large water drop == 0  -0.059359   0.012275  -4.836   <0.001 ***
+Pendulum impact 2 - Large water drop == 0   0.007867   0.012941   0.608   0.9295    
+Small water drop - Large water drop == 0    0.032115   0.012529   2.563   0.0508 .  
+Pendulum impact 2 - Pendulum impact 1 == 0  0.067226   0.013036   5.157   <0.001 ***
+Small water drop - Pendulum impact 1 == 0   0.091475   0.012601   7.260   <0.001 ***
+Small water drop - Pendulum impact 2 == 0   0.024249   0.013263   1.828   0.2599 
+
+
+
+
+
+
+
+
+## Clutch Morhpometrics 
+```{r}
+clutch_size_and_thickness= ggplot(biomech, aes(x=Clutch_Size, y=Clutch_Thickness_mm)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Clutch thickness", x="Clutch size") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+clutch_size_and_thickness
+
+correlationstuff = glm(Clutch_Size~Clutch_Thickness_mm, data=biomech, family=Gamma(link=log))
+correlationstuff
+summary(correlationstuff)
+Anova(correlationstuff)
+
+#calculate R-squared like this
+with(summary(correlationstuff), 1 - deviance/null.deviance)
+```
+
+R^2 = 0.4110576
+
+
+
+
+
+## Modal Analyses
+
+### Frequency
+
+Summarize data
+```{r}
+library(dplyr)
+biomech_summary1 = biomech %>%
+  group_by(Species, Excitation_Test, Excitation_Test_Type, Clutch) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary1
+
+biomech_summary1.5 = biomech %>%
+  group_by(Species, Excitation_Test_Type, Clutch) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary1.5
+
+biomech_summary2 = biomech %>%
+  group_by(Species, Excitation_Test_Type) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary2
+
+biomech_summary2.5 = biomech %>%
+  group_by(Species, Excitation_Test) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary2.5
+
+biomech_summary3 = biomech %>%
+  group_by(Species, Clutch) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary3
+
+biomech_summary4 = biomech %>%
+  group_by(Species) %>%
+summarise(mean = mean(Frequency_Hz, na.rm=T), SE= sd(Frequency_Hz, na.rm=T)/sqrt(length(Frequency_Hz)), SD = sd(Frequency_Hz, na.rm=T), max = max(Frequency_Hz, na.rm=T), min = min(Frequency_Hz, na.rm=T), sample_size_unique=n_distinct(Frequency_Hz, na.rm=T), sample_size=n())
+biomech_summary4
+```
+
+> The significant species × excitation type interaction was due to the lower frequencies excited by pendulum impacts in A. spurrelli which were on average ~30 Hz lower than those by water drops 
+
+Clutch Morphometrics
+```{r}
+frequency_vs_clutchsize_raw= ggplot(biomech, aes(x=Clutch_Size, y=Frequency_Hz)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Frequency (Hz)", x="Clutch size") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+frequency_vs_clutchsize_raw
+
+frequency_vs_clutchsize_raw= ggplot(biomech, aes(x=Clutch_Thickness_mm, y=Frequency_Hz)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Frequency (Hz)", x="Clutch Thickness") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+frequency_vs_clutchsize_raw
+
+library(car)
+# effect of clutch size?
+m2 = lmer(Frequency_Hz~Species*Clutch_Size*Excitation_Test +  (1|Clutch), data=biomech)
+Anova(m2)
+
+m2 = lmer(Frequency_Hz~Species*Clutch_Thickness_mm +  (1|Clutch), data=biomech)
+Anova(m2)
+```
+
+
+#### Visualization
+```{r}
+library(ggplot2)
+library(scales)
+frequency_raw_perclutch= ggplot(biomech_summary1, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=mean)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Frequency (Hz)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8, face = "italic"), legend.title = element_blank(),  legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black"), strip.text = element_text(size = 8)) +
+  theme(legend.title.align=0.5, axis.text.x = element_blank(), legend.position = c(.85, .95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=7)) +
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+frequency_raw_perclutch
+
+frequency_raw= ggplot(biomech, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Frequency_Hz)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Frequency (Hz)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8, face = "italic"), legend.title = element_blank(),  legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black"), strip.text = element_text(size = 8)) +
+  theme(legend.title.align=0.5, axis.text.x = element_blank(), legend.position = c(.85, .95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=7)) +
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+frequency_raw
+```
+
+horizontal viz means across types
+```{r}
+frequency_raw_perclutch_horz= ggplot(biomech_summary1.5, aes(x=Excitation_Test_Type, y=mean)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species, shape=Excitation_Test_Type), position = position_jitterdodge(.2), size = 2, color="black") +
+  labs(y="Frequency (Hz)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8, face = "italic"), legend.title = element_blank(),  legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black"), axis.text.y = element_blank(), strip.text = element_text(size = 8)) +
+  theme(legend.title.align=0.5, legend.position = c(.85, .95)) +
+  scale_y_continuous(limits=c(0,450), breaks= pretty_breaks(n=7)) +
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  scale_shape_manual(values = c(24, 21)) +
+  coord_flip()
+frequency_raw_perclutch_horz
+```
+
+#### STATS
+GLMM
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+hist(biomech$Frequency_Hz)
+
+#frequency
+modal_frequency_fullmodel = lmer(Frequency_Hz~Species*Excitation_Test +  (1|Clutch), data=biomech)
+modal_frequency_nointeraction = lmer(Frequency_Hz~Species+Excitation_Test +  (1|Clutch), data=biomech)
+modal_frequency_nospecies = lmer(Frequency_Hz~Excitation_Test +  (1|Clutch), data=biomech)
+modal_frequency_noexcitationtest = lmer(Frequency_Hz~Species +  (1|Clutch), data=biomech)
+
+modal_frequency_fullmodel2 = lmer(Frequency_Hz~Species*Excitation_Test*Clutch_Size +  (1|Clutch), data=biomech)
+modal_frequency_fullmodel3 = lm(Frequency_Hz~Species*Excitation_Test, data=biomech)
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(modal_frequency_fullmodel2, modal_frequency_fullmodel,  modal_frequency_nointeraction, modal_frequency_nospecies, modal_frequency_noexcitationtest), c("modal_frequency_fullmodel2", "modal_frequency_fullmodel", "modal_frequency_nointeraction", "modal_frequency_nospecies", "modal_frequency_noexcitationtest")), LL = FALSE)
+
+plot(fitted(modal_frequency_fullmodel), residuals(modal_frequency_fullmodel))
+hist(residuals(modal_frequency_fullmodel))
+qqnorm(residuals(modal_frequency_fullmodel))
+qqline(residuals(modal_frequency_fullmodel))
+shapiro.test(residuals(modal_frequency_fullmodel))
+
+summary(modal_frequency_fullmodel)
+Anova(modal_frequency_fullmodel)
+```
+
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: Frequency_Hz
+                          Chisq Df Pr(>Chisq)    
+Species                 849.529  1  < 2.2e-16 ***
+Excitation_Test          60.720  3  4.125e-13 ***
+Species:Excitation_Test  18.333  3  0.0003755 ***
+
+
+Likelihood ratio tests
+```{r}
+anova(modal_frequency_fullmodel, modal_frequency_nointeraction, test = "Chisq")
+anova(modal_frequency_fullmodel, modal_frequency_nospecies, test = "Chisq")
+anova(modal_frequency_fullmodel, modal_frequency_noexcitationtest, test = "Chisq")
+
+#clutch effects
+anova(modal_frequency_fullmodel, modal_frequency_fullmodel3, test = "Chisq")
+```
+
+EFFECT OF INTERACTION:
+* **X = 18.289; p-value = 0.0003835 **
+
+EFFECT OF SPECIES:
+* **X = 514.28; p-value < 2.2e-16 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 74.58; p-value = 4.683e-14 **
+
+
+##### Posthoc analyses
+```{r}
+library(emmeans)
+# within excitation type comparisons
+emms<-emmeans(modal_frequency_fullmodel, ~Species|Excitation_Test) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+
+#within species comparisons
+emms<-emmeans(modal_frequency_fullmodel, ~Excitation_Test|Species) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+```
+
+*Within Excitation Type Comparisons*
+ Excitation_Test   Species_pairwise             estimate   SE  df t.ratio p.value
+ Large water drop  A. callidryas - A. spurrelli    -86.6 4.79 503 -18.076  <.0001
+ Pendulum impact 1 A. callidryas - A. spurrelli    -64.6 4.71 505 -13.726  <.0001
+ Pendulum impact 2 A. callidryas - A. spurrelli    -66.2 4.90 510 -13.489  <.0001
+ Small water drop  A. callidryas - A. spurrelli    -84.2 4.94 506 -17.042  <.0001
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 4 tests 
+
+
+*Within Species Comparisons*
+ Species       Excitation_Test_pairwise              estimate   SE  df t.ratio p.value
+ A. callidryas Large water drop - Pendulum impact 1     9.436 4.20 497   2.247  0.0502
+ A. callidryas Large water drop - Pendulum impact 2     8.160 4.43 497   1.842  0.0991
+ A. callidryas Large water drop - Small water drop     -1.357 4.27 495  -0.318  0.8465
+ A. callidryas Pendulum impact 1 - Pendulum impact 2   -1.276 4.48 499  -0.285  0.8465
+ A. callidryas Pendulum impact 1 - Small water drop   -10.794 4.31 496  -2.505  0.0301
+ A. callidryas Pendulum impact 2 - Small water drop    -9.518 4.54 497  -2.096  0.0628
+ 
+ A. spurrelli  Large water drop - Pendulum impact 1    31.413 5.02 496   6.258  <.0001
+ A. spurrelli  Large water drop - Pendulum impact 2    28.567 5.05 505   5.661  <.0001
+ A. spurrelli  Large water drop - Small water drop      0.985 5.14 497   0.192  0.8481
+ A. spurrelli  Pendulum impact 1 - Pendulum impact 2   -2.846 4.89 504  -0.582  0.7481
+ A. spurrelli  Pendulum impact 1 - Small water drop   -30.428 5.00 495  -6.086  <.0001
+ A. spurrelli  Pendulum impact 2 - Small water drop   -27.582 5.04 505  -5.477  <.0001
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 12 tests 
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+
+## Vibration decay over time
+
+#### Time constant - Decay rate
+```{r}
+time_constant_raw= ggplot(biomech, aes(x=factor(Excitation_Test, level = c("Pendulum impact", "Large water drop", "Small water drop")), y=Time_Constant_s)) + #add the axis
+  geom_point(aes(color=Species), position = position_jitterdodge(.2), size = 1) +
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  labs(y="Time constant (s)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8, face = "italic"), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.85,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) 
+time_constant_raw
+
+#Clutch Morphometrics
+timeconstant_vs_clutchsize_raw= ggplot(biomech, aes(x=Clutch_Size, y=Time_Constant_s)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Time constant (s)", x="Clutch size") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+timeconstant_vs_clutchsize_raw
+
+timeconstant_vs_clutchsize_raw= ggplot(biomech, aes(x=Clutch_Thickness_mm, y=Time_Constant_s)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Time constant (s)", x="Clutch Thickness") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+timeconstant_vs_clutchsize_raw
+
+# effect of clutch size?
+m2 = lmer(Time_Constant_s~Species*Clutch_Size +  (1|Clutch), data=biomech)
+Anova(m2)
+
+m2 = lmer(Time_Constant_s~Species*Clutch_Thickness_mm +  (1|Clutch), data=biomech)
+Anova(m2)
+```
+
+Summarize data
+```{r}
+library(dplyr)
+biomech_summary5 = biomech %>%
+  group_by(Species, Excitation_Test, Excitation_Test_Type, Clutch) %>%
+summarise(mean = mean(Time_Constant_s, na.rm=T), SE= sd(Time_Constant_s, na.rm=T)/sqrt(length(Time_Constant_s)), SD = sd(Time_Constant_s, na.rm=T), max = max(Time_Constant_s, na.rm=T), min = min(Time_Constant_s, na.rm=T), sample_size_unique=n_distinct(Time_Constant_s, na.rm=T), sample_size=n())
+biomech_summary5
+
+biomech_summary5.5 = biomech %>%
+  group_by(Species, Excitation_Test) %>%
+summarise(mean = mean(Time_Constant_s, na.rm=T), SE= sd(Time_Constant_s, na.rm=T)/sqrt(length(Time_Constant_s)), SD = sd(Time_Constant_s, na.rm=T), max = max(Time_Constant_s, na.rm=T), min = min(Time_Constant_s, na.rm=T), sample_size_unique=n_distinct(Time_Constant_s, na.rm=T), sample_size=n())
+biomech_summary5.5
+
+biomech_summary6 = biomech %>%
+  group_by(Species) %>%
+summarise(mean = mean(Time_Constant_s, na.rm=T), SE= sd(Time_Constant_s, na.rm=T)/sqrt(length(Time_Constant_s)), SD = sd(Time_Constant_s, na.rm=T), max = max(Time_Constant_s, na.rm=T), min = min(Time_Constant_s, na.rm=T), sample_size_unique=n_distinct(Time_Constant_s, na.rm=T), sample_size=n())
+biomech_summary6
+```
+
+##### Visualization
+```{r}
+library(ggplot2)
+
+time_constant_perclutch= ggplot(biomech_summary5, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=mean)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Time constant (s)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.position = "none", strip.text = element_blank()) +
+  scale_y_continuous(breaks= pretty_breaks(n=7)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+time_constant_perclutch
+
+time_constant_perclutch= ggplot(biomech, aes(x=factor(Excitation_Test, level = c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Time_Constant_s)) + #add the axis
+  geom_boxplot(aes(color=Species), outlier.shape = NA, fill = NA) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Time constant (s)", x=element_blank()) + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.position = "none", strip.text = element_blank()) +
+  scale_y_continuous(breaks= pretty_breaks(n=7)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+time_constant_perclutch
+```
+
+##### STATS
+
+GLMM
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+hist(biomech$Time_Constant_s)
+
+#frequency
+time_constant_fullmodel = lmer(Time_Constant_s~Species*Excitation_Test +  (1|Clutch), data=biomech)
+time_constant_nointeraction = lmer(Time_Constant_s~Species+Excitation_Test +  (1|Clutch), data=biomech)
+time_constant_nospecies = lmer(Time_Constant_s~Excitation_Test +  (1|Clutch), data=biomech)
+time_constant_noexcitationtest = lmer(Time_Constant_s~Species +  (1|Clutch), data=biomech)
+
+time_constant_fullmodel2 = lmer(Time_Constant_s~Species*Excitation_Test*Clutch_Size +  (1|Clutch), data=biomech)
+
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(time_constant_fullmodel2, time_constant_fullmodel,  time_constant_nointeraction, time_constant_nospecies, time_constant_noexcitationtest), c("time_constant_fullmodel2", "time_constant_fullmodel", "time_constant_nointeraction", "time_constant_nospecies", "time_constant_noexcitationtest")), LL = FALSE)
+
+plot(fitted(time_constant_fullmodel), residuals(time_constant_fullmodel))
+hist(residuals(time_constant_fullmodel))
+qqnorm(residuals(time_constant_fullmodel))
+qqline(residuals(time_constant_fullmodel))
+shapiro.test(residuals(time_constant_fullmodel))
+
+summary(time_constant_fullmodel)
+Anova(time_constant_fullmodel)
+```
+
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: Time_Constant_s
+                          Chisq Df Pr(>Chisq)    
+Species                 309.911  1  < 2.2e-16 ***
+Excitation_Test          10.653  3   0.013756 *  
+Species:Excitation_Test  14.206  3   0.002638 ** 
+
+
+Likelihood ratio tests
+```{r}
+anova(time_constant_fullmodel, time_constant_nointeraction, test = "Chisq")
+anova(time_constant_fullmodel, time_constant_nospecies, test = "Chisq")
+anova(time_constant_fullmodel, time_constant_noexcitationtest, test = "Chisq")
+```
+
+EFFECT OF INTERACTION:
+* **X = 14.147; p-value = 0.002712 **
+
+EFFECT OF SPECIES:
+* **X = 255.13; p-value < 2.2e-16 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 24.433; p-value = 0.0004346 **
+
+
+
+##### Posthoc analyses
+```{r}
+library(emmeans)
+# within excitation type comparisons
+emms<-emmeans(time_constant_fullmodel, ~Species|Excitation_Test) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+
+#within species comparisons
+emms<-emmeans(time_constant_fullmodel, ~Excitation_Test|Species) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+```
+
+*Within Excitation Type Comparisons*
+Excitation_Test   Species_pairwise             estimate      SE  df t.ratio p.value
+ Large water drop  A. callidryas - A. spurrelli   0.0764 0.00750 502  10.192  <.0001
+ Pendulum impact 1 A. callidryas - A. spurrelli   0.0484 0.00737 503   6.573  <.0001
+ Pendulum impact 2 A. callidryas - A. spurrelli   0.0799 0.00769 509  10.398  <.0001
+ Small water drop  A. callidryas - A. spurrelli   0.0823 0.00774 505  10.628  <.0001
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 4 tests 
+
+
+*Within Species Comparisons*
+ Species       Excitation_Test_pairwise              estimate      SE  df t.ratio p.value
+ A. callidryas Large water drop - Pendulum impact 1   0.02355 0.00657 496   3.583  0.0015
+ A. callidryas Large water drop - Pendulum impact 2  -0.00597 0.00693 496  -0.860  0.7965
+ A. callidryas Large water drop - Small water drop   -0.00314 0.00669 495  -0.469  0.7965
+ A. callidryas Pendulum impact 1 - Pendulum impact 2 -0.02952 0.00702 499  -4.207  0.0004
+ A. callidryas Pendulum impact 1 - Small water drop  -0.02669 0.00674 496  -3.958  0.0005
+ A. callidryas Pendulum impact 2 - Small water drop   0.00283 0.00711 497   0.398  0.7965
+ 
+ A. spurrelli  Large water drop - Pendulum impact 1  -0.00444 0.00786 496  -0.565  0.7965
+ A. spurrelli  Large water drop - Pendulum impact 2  -0.00246 0.00791 504  -0.311  0.7965
+ A. spurrelli  Large water drop - Small water drop    0.00271 0.00804 496   0.337  0.7965
+ A. spurrelli  Pendulum impact 1 - Pendulum impact 2  0.00198 0.00767 503   0.258  0.7965
+ A. spurrelli  Pendulum impact 1 - Small water drop   0.00715 0.00783 495   0.914  0.7965
+ A. spurrelli  Pendulum impact 2 - Small water drop   0.00517 0.00789 504   0.656  0.7965
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 12 tests 
+
+
+
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+# Figure 3
+```{r}
+library(gridExtra)
+library(cowplot)
+
+#  @ portrait at 7.08661 x 8.26772 max for JEB
+# 4x8.5 portrait looks good
+
+Figure3 = plot_grid(frequency_raw_perclutch, time_constant_perclutch, labels = "AUTO", label_x = -.01, label_y = 1, scale =1, ncol=1, nrow = 2, label_size = 12, align = "v")
+Figure3
+
+#@ 3.46x6
+```
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+## Peak Amplitude
+```{r}
+peakamplitude_summary = entire_disturbance_biomechmeasurements %>% 
+  group_by(Species, Excitation_Test, Excitation_Test_Type, Clutch) %>%
+summarise(mean = mean(Peak_Amplitude_G, na.rm=T), SE= sd(Peak_Amplitude_G, na.rm=T)/sqrt(length(Peak_Amplitude_G)), SD = sd(Peak_Amplitude_G, na.rm=T), max = max(Peak_Amplitude_G, na.rm=T), min = min(Peak_Amplitude_G, na.rm=T), sample_size=n(), sample_size_unique=n_distinct(Peak_Amplitude_G, na.rm=T))
+peakamplitude_summary
+```
+
+
+##### Visualization
+```{r}
+peak_amplitude_raw = ggplot(entire_disturbance_biomechmeasurements, aes(x=factor(Excitation_Test, level =c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Peak_Amplitude_G)) + #add the axis
+  geom_boxplot(aes(color=Species), fill = NA, outlier.shape = NA) + 
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Peak amplitude (m/s^2)", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), axis.text.x = element_blank(), strip.text = element_text(size = 8)) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.01,.95), strip.background = element_rect(fill = NA)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+peak_amplitude_raw
+```
+
+
+
+
+Clutch Morphometrics
+```{r}
+peak_amplitude_by_clutchsize_raw = ggplot(entire_disturbance_biomechmeasurements, aes(x=Clutch_Size, y=Peak_Amplitude_G)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Peak amplitude (G)", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.01,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue"))
+peak_amplitude_by_clutchsize_raw
+
+peak_amplitude_by_clutchsize_raw = ggplot(entire_disturbance_biomechmeasurements, aes(x=Clutch_Thickness_mm, y=Peak_Amplitude_G)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Peak amplitude (G)", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.01,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue"))
+peak_amplitude_by_clutchsize_raw
+
+# effect of clutch size?
+m2 = lmer(Peak_Amplitude_G~Species*Clutch_Size*Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+Anova(m2)
+
+m2 = lmer(Peak_Amplitude_G~Species*Clutch_Size +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+Anova(m2)
+```
+
+
+
+##### STATS
+
+LMM
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+hist(biomechmeasurements$Peak_Amplitude_G)
+
+#amkplitude
+peak_amplitude_fullmodel = lmer(Peak_Amplitude_G~Species*Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+peak_amplitude_nointeraction = lmer(Peak_Amplitude_G~Species+Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+peak_amplitude_nospecies = lmer(Peak_Amplitude_G~Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+peak_amplitude_noexcitationtest = lmer(Peak_Amplitude_G~Species +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+
+peak_amplitude_fullmodel2 = lmer(Peak_Amplitude_G~Species*Excitation_Test*Clutch_Size +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(peak_amplitude_fullmodel2, peak_amplitude_fullmodel,  peak_amplitude_nointeraction, peak_amplitude_nospecies, peak_amplitude_noexcitationtest), c("peak_amplitude_fullmodel2", "peak_amplitude_fullmodel", "peak_amplitude_nointeraction", "peak_amplitude_nospecies", "peak_amplitude_noexcitationtest")), LL = FALSE)
+
+plot(fitted(peak_amplitude_fullmodel), residuals(peak_amplitude_fullmodel))
+hist(residuals(peak_amplitude_fullmodel))
+qqnorm(residuals(peak_amplitude_fullmodel))
+qqline(residuals(peak_amplitude_fullmodel))
+shapiro.test(residuals(peak_amplitude_fullmodel))
+
+summary(peak_amplitude_fullmodel)
+Anova(peak_amplitude_fullmodel)
+```
+
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: Peak_Amplitude_G
+                         Chisq Df Pr(>Chisq)    
+Species                 33.296  1  7.913e-09 ***
+Excitation_Test         50.657  3  5.787e-11 ***
+Species:Excitation_Test 39.045  3  1.698e-08 ***
+
+
+Likelihood ratio tests
+```{r}
+anova(peak_amplitude_fullmodel, peak_amplitude_nointeraction, test = "Chisq")
+anova(peak_amplitude_fullmodel, peak_amplitude_nospecies, test = "Chisq")
+anova(peak_amplitude_fullmodel, peak_amplitude_noexcitationtest, test = "Chisq")
+```
+
+EFFECT OF INTERACTION:
+* **X = 35.349; p-value = 1.028e-07 **
+
+EFFECT OF SPECIES:
+* **X = 59.464; p-value = 3.76e-12 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 69.055; p-value = 6.387e-13 **
+
+
+
+##### Posthoc analyses
+```{r}
+library(emmeans)
+# within excitation type comparisons
+emms<-emmeans(peak_amplitude_fullmodel, ~Species|Excitation_Test) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+
+#within species comparisons
+emms<-emmeans(peak_amplitude_fullmodel, ~Excitation_Test|Species) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+```
+
+*Within Excitation Type Comparisons*
+ Excitation_Test   Species_pairwise             estimate    SE  df t.ratio p.value
+ Large water drop  A. callidryas - A. spurrelli  0.04942 0.168 107   0.294  0.9618
+ Pendulum impact 1 A. callidryas - A. spurrelli -1.05821 0.166 108  -6.388  <.0001
+ Pendulum impact 2 A. callidryas - A. spurrelli -0.95910 0.168 109  -5.693  <.0001
+ Small water drop  A. callidryas - A. spurrelli  0.00821 0.171 106   0.048  0.9618
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 4 tests 
+
+
+*Within Species Comparisons*
+ Species       Excitation_Test_pairwise              estimate    SE  df t.ratio p.value
+ A. callidryas Large water drop - Pendulum impact 1    0.0664 0.161 102   0.412  0.6811
+ A. callidryas Large water drop - Pendulum impact 2    0.4911 0.164 102   3.000  0.0068
+ A. callidryas Large water drop - Small water drop     0.4015 0.161 102   2.494  0.0213
+ A. callidryas Pendulum impact 1 - Pendulum impact 2   0.4247 0.164 102   2.594  0.0186
+ A. callidryas Pendulum impact 1 - Small water drop    0.3352 0.161 102   2.082  0.0501
+ A. callidryas Pendulum impact 2 - Small water drop   -0.0895 0.164 102  -0.547  0.6389
+ 
+ A. spurrelli  Large water drop - Pendulum impact 1   -1.0413 0.169 103  -6.160  <.0001
+ A. spurrelli  Large water drop - Pendulum impact 2   -0.5175 0.169 103  -3.061  0.0067
+ A. spurrelli  Large water drop - Small water drop     0.3603 0.175 103   2.061  0.0501
+ A. spurrelli  Pendulum impact 1 - Pendulum impact 2   0.5238 0.166 102   3.157  0.0063
+ A. spurrelli  Pendulum impact 1 - Small water drop    1.4016 0.172 104   8.125  <.0001
+ A. spurrelli  Pendulum impact 2 - Small water drop    0.8778 0.172 104   5.089  <.0001
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 12 tests 
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+
+
+## Vibration Duration
+
+```{r}
+#Clutch Morphometrics
+timeconstant_vs_clutchsize_raw= ggplot(biomechmeasurements, aes(x=Clutch_Size, y=Mean_Duration_s)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Vibration duratino (s)", x="Clutch size") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+timeconstant_vs_clutchsize_raw
+
+timeconstant_vs_clutchsize_raw= ggplot(biomechmeasurements, aes(x=Clutch_Thickness_mm, y=Mean_Duration_s)) + #add the axis
+  geom_smooth(aes(color=Species, group=interaction(Species,Excitation_Test), linetype=Species), method = "glm", se=F, size = 1 ) +
+  geom_point(aes(fill=Species), position = position_jitterdodge(.2), size = 1, color="black", pch=21) +
+  labs(y="Vibratin duration (s)", x="Clutch Thickness") + #creat labels... 
+  theme_classic(base_size=8) +
+  theme(legend.text = element_text(size = 8), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 8), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= c(.025,.95)) +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) 
+timeconstant_vs_clutchsize_raw
+
+# effect of clutch size?
+m2 = lmer(Mean_Duration_s~Species*Clutch_Size*Excitation_Test +  (1|Clutch), data=biomechmeasurements)
+Anova(m2)
+
+m2 = lmer(Mean_Duration_s~Species*Clutch_Size +  (1|Clutch), data=biomechmeasurements)
+Anova(m2)
+```
+
+
+```{r}
+vibrationduration_summary = entire_disturbance_biomechmeasurements %>% 
+  group_by(Species, Excitation_Test, Excitation_Test_Type, Clutch) %>%
+summarise(mean = mean(Mean_Duration_s, na.rm=T), SE= sd(Mean_Duration_s, na.rm=T)/sqrt(length(Mean_Duration_s)), SD = sd(Mean_Duration_s, na.rm=T), max = max(Mean_Duration_s, na.rm=T), min = min(Mean_Duration_s, na.rm=T), sample_size=n(), sample_size_unique=n_distinct(Mean_Duration_s, na.rm=T))
+vibrationduration_summary
+
+vibrationduration_summary2 = entire_disturbance_biomechmeasurements %>% 
+  group_by(Species) %>%
+summarise(mean = mean(Mean_Duration_s, na.rm=T), SE= sd(Mean_Duration_s, na.rm=T)/sqrt(length(Mean_Duration_s)), SD = sd(Mean_Duration_s, na.rm=T), max = max(Mean_Duration_s, na.rm=T), min = min(Mean_Duration_s, na.rm=T), sample_size=n(), sample_size_unique=n_distinct(Mean_Duration_s, na.rm=T))
+vibrationduration_summary2
+
+vibrationduration_summary3 = entire_disturbance_biomechmeasurements %>% 
+  group_by(Excitation_Test_Type) %>%
+summarise(mean = mean(Mean_Duration_s, na.rm=T), SE= sd(Mean_Duration_s, na.rm=T)/sqrt(length(Mean_Duration_s)), SD = sd(Mean_Duration_s, na.rm=T), max = max(Mean_Duration_s, na.rm=T), min = min(Mean_Duration_s, na.rm=T), sample_size=n(), sample_size_unique=n_distinct(Mean_Duration_s, na.rm=T))
+vibrationduration_summary3
+```
+
+
+##### Visualization
+```{r}
+vibration_duration_plot2 = ggplot(entire_disturbance_biomechmeasurements, aes(x=factor(Excitation_Test, level =c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Mean_Duration_s)) + #add the axis
+  geom_boxplot(aes(color=Species), fill = NA, outlier.shape = NA) + 
+  geom_point(aes(fill=Species), position = position_jitterdodge(),  size = 1, color = "black", pch=21) +
+  labs(y="Vibration duration (s)", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), axis.text.x = element_blank()) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none", strip.text = element_text(size = 8), strip.background = element_rect(fill = NA)) +
+  scale_y_continuous(breaks= pretty_breaks(n=7)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+vibration_duration_plot2
+
+vibration_duration_plot2 = ggplot(entire_disturbance_biomechmeasurements, aes(x=factor(Excitation_Test, level =c("Pendulum impact 1", "Pendulum impact 2", "Small water drop", "Large water drop")), y=Mean_Duration_s)) + #add the axis
+  geom_boxplot(aes(color=Species), fill = NA, outlier.shape = NA) + 
+  geom_point(aes(fill=Species), position = position_jitterdodge(),  size = 1, color = "black", pch=21) +
+  labs(y="Vibration duration (s)", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none", strip.text = element_blank())+
+  scale_y_continuous(breaks= pretty_breaks(n=7)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_grid(cols = vars(Excitation_Test_Type), as.table = T, scales = "free", space = "free")
+vibration_duration_plot2
+```
+
+##### STATS
+
+LMM
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+hist(entire_disturbance_biomechmeasurements$Mean_Duration_s)
+
+#frequency
+vibration_duration_fullmodel = lmer(Mean_Duration_s~Species*Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+vibration_duration_nointeraction = lmer(Mean_Duration_s~Species+Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+vibration_duration_nospecies = lmer(Mean_Duration_s~Excitation_Test +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+vibration_duration_noexcitationtest = lmer(Mean_Duration_s~Species +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+
+vibration_duration_fullmodel2 = lmer(Mean_Duration_s~Species*Excitation_Test*Clutch_Size +  (1|Clutch), data=entire_disturbance_biomechmeasurements)
+
+# model with clutch size and with impact distance is worse
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(vibration_duration_fullmodel2, vibration_duration_fullmodel,  vibration_duration_nointeraction, vibration_duration_nospecies, vibration_duration_noexcitationtest), c( "vibration_duration_fullmodel2", "vibration_duration_fullmodel", "vibration_duration_nointeraction", "vibration_duration_nospecies", "vibration_duration_noexcitationtest")), LL = FALSE)
+
+plot(fitted(vibration_duration_fullmodel), residuals(vibration_duration_fullmodel))
+hist(residuals(vibration_duration_fullmodel))
+qqnorm(residuals(vibration_duration_fullmodel))
+qqline(residuals(vibration_duration_fullmodel))
+shapiro.test(residuals(vibration_duration_fullmodel))
+
+summary(vibration_duration_fullmodel)
+Anova(vibration_duration_fullmodel)
+```
+
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: Mean_Duration_s
+                           Chisq Df Pr(>Chisq)    
+Species                 233.6487  1  < 2.2e-16 ***
+Excitation_Test          44.9238  3  9.604e-10 ***
+Species:Excitation_Test   4.4417  3     0.2175 
+
+
+Likelihood ratio tests
+```{r}
+anova(vibration_duration_fullmodel, vibration_duration_nointeraction, test = "Chisq")
+anova(vibration_duration_fullmodel, vibration_duration_nospecies, test = "Chisq")
+anova(vibration_duration_fullmodel, vibration_duration_noexcitationtest, test = "Chisq")
+```
+
+EFFECT OF INTERACTION:
+* **X = 4.6407; p-value = 0.2001 **
+
+EFFECT OF SPECIES:
+* **X = 136.96; p-value < 2.2e-16 **
+
+EFFECT OF EXCITATION TEST:
+* **X = 42.988; p-value = 1.173e-07 **
+
+
+
+##### Posthoc analyses
+```{r}
+library(emmeans)
+# within excitation type comparisons
+emms<-emmeans(vibration_duration_fullmodel, ~Species|Excitation_Test) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+
+#within species comparisons
+emms<-emmeans(vibration_duration_fullmodel, ~Excitation_Test|Species) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+```
+
+*Within Excitation Type Comparisons*
+ Excitation_Test   Species_pairwise             estimate     SE  df t.ratio p.value
+ Large water drop  A. callidryas - A. spurrelli    0.270 0.0365 105   7.386  <.0001
+ Pendulum impact 1 A. callidryas - A. spurrelli    0.339 0.0361 106   9.399  <.0001
+ Pendulum impact 2 A. callidryas - A. spurrelli    0.316 0.0367 107   8.619  <.0001
+ Small water drop  A. callidryas - A. spurrelli    0.242 0.0371 104   6.534  <.0001
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 4 tests 
+
+
+*Within Species Comparisons*
+ Species       Excitation_Test_pairwise              estimate     SE  df t.ratio p.value
+ A. callidryas Large water drop - Pendulum impact 1  -0.15606 0.0347 101  -4.500  0.0001
+ A. callidryas Large water drop - Pendulum impact 2  -0.10505 0.0353 102  -2.977  0.0109
+ A. callidryas Large water drop - Small water drop    0.03696 0.0347 101   1.066  0.3468
+ A. callidryas Pendulum impact 1 - Pendulum impact 2  0.05101 0.0353 102   1.446  0.2018
+ A. callidryas Pendulum impact 1 - Small water drop   0.19302 0.0347 101   5.566  <.0001
+ A. callidryas Pendulum impact 2 - Small water drop   0.14202 0.0353 102   4.025  0.0004
+ 
+ A. spurrelli  Large water drop - Pendulum impact 1  -0.08686 0.0365 102  -2.380  0.0383
+ A. spurrelli  Large water drop - Pendulum impact 2  -0.05848 0.0365 102  -1.602  0.1682
+ A. spurrelli  Large water drop - Small water drop    0.00941 0.0377 102   0.249  0.8035
+ A. spurrelli  Pendulum impact 1 - Pendulum impact 2  0.02838 0.0357 101   0.794  0.4682
+ A. spurrelli  Pendulum impact 1 - Small water drop   0.09626 0.0373 103   2.581  0.0270
+ A. spurrelli  Pendulum impact 2 - Small water drop   0.06789 0.0373 103   1.820  0.1228
+
+Degrees-of-freedom method: kenward-roger 
+P value adjustment: fdr method for 12 tests 
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+
+
+# Figure 4
+```{r}
+library(gridExtra)
+library(cowplot)
+
+#  @ portrait at 7.08661 x 8.26772 max for JEB
+# 4x8.5 portrait looks good
+
+Figure4 = plot_grid(peak_amplitude_raw, vibration_duration_plot2, labels = "AUTO", label_x = -.01, label_y = 1, scale =1, ncol=1, nrow = 2, label_size = 12, align = "v")
+Figure4
+
+#@ 3.46x6
+```
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+
+### Amplitude Loss
+
+```{r}
+amploss = entire_disturbance_biomechmeasurements %>%
+  filter(Excitation_Test_Type == "Pendulum impact")
+amploss
+
+amploss_summary = amploss %>% 
+  group_by(Species, Excitation_Test_Subtype, Vibration_Signal_Portion) %>%
+summarise(mean = mean(Peak_Amplitude_G, na.rm=T), SE= sd(Peak_Amplitude_G, na.rm=T)/sqrt(length(Peak_Amplitude_G)), SD = sd(Peak_Amplitude_G, na.rm=T), max = max(Peak_Amplitude_G, na.rm=T), min = min(Peak_Amplitude_G, na.rm=T), sample_size=n(), sample_size_unique=n_distinct(Peak_Amplitude_G, na.rm=T))
+amploss_summary
+```
+
+
+##### Visualization
+```{r}
+library(lemon)
+amplitude_loss_plot1 = ggplot(amploss, aes(x=as.character(Excitation_Test_Subtype), y=Peak_Amplitude_G)) + #add the axis
+  lemon::geom_pointpath(aes(fill=Species, group=Clutch), size=1,  shorten = F, distance=0, color="black", pch=21) +
+  labs(y="Peak amplitude (m/s^2)", x= "Distance to accelerometer (cm)") +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), strip.text = element_blank(), strip.placement = "none") +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_color_manual(values = c("red3", "darkblue")) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  facet_rep_grid(col=vars(Species))
+amplitude_loss_plot1
+```
+
+
+### Amplitude difference - proportion
+
+Import data from entire disturbance
+```{r}
+library(readxl)
+amploss_props <- read_excel("~/Desktop/Publications/Manuscripts/In Prep/Comparative Egg Clutch Biomechanics/Comparative Egg Clutch Biomechanics.xlsx", 
+    sheet = "Amplitude Comparisons", na = "NA")
+amploss_props
+```
+
+##### Visualization
+```{r}
+library(lemon)
+library(ggplot2)
+amplitude_loss_prop_plot1 = ggplot(amploss_props, aes(x=Species, y=Proportion_Amplitude)) + #add the axis
+  geom_hline(yintercept=1, linetype="dashed", color = "black", size=.5)+
+  geom_boxplot(aes(color=Species, group=interaction(Species,Comparison)), fill = NA, outlier.shape = NA) + 
+  geom_point(aes(fill=Species), position = position_jitterdodge(.3), size = 1, color = "black", pch=21) +
+  labs(y="Proportion of peak amplitude", x= element_blank()) +
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), axis.text.x = element_text(face = "italic")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) +
+  scale_fill_manual(values = c("red3", "darkblue")) +
+  scale_color_manual(values = c("red3", "darkblue")) 
+amplitude_loss_prop_plot1
+```
+
+
+#### STATS
+stats on raw difference
+```{r}
+hist(amploss_props$Raw_Difference)
+
+m=lm(Raw_Difference~Species, data = amploss_props)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(Raw_Difference~Species, data = amploss_props)
+```
+
+Welch Two Sample t-test
+
+data:  Raw_Difference by Species
+t = -0.94771, df = 18.79, p-value = 0.3553
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+ -0.6275243  0.2365660
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                  0.3283333                   0.5238125 
+                  
+stats on proportion data
+```{r}
+hist(amploss_props$Proportion_Amplitude)
+
+m=lm(Proportion_Amplitude~Species, data = amploss_props)
+
+plot(fitted(m), residuals(m))
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+t.test(Proportion_Amplitude~Species, data = amploss_props)
+
+# exclude values of proportion peak amplitude over 1
+amploss_props_exlcude = amploss_props %>%
+  filter(Proportion_Amplitude<1)
+t.test(Proportion_Amplitude~Species, data = amploss_props_exlcude)
+```
+
+Shapiro-Wilk normality test
+
+data:  residuals(m)
+W = 0.97169, p-value = 0.5668
+
+Welch Two Sample t-test
+
+data:  Proportion_Amplitude by Species
+*t = -1.6567, df = 26.578, p-value = 0.1093*
+alternative hypothesis: true difference in means between group A. callidryas and group A. spurrelli is not equal to 0
+95 percent confidence interval:
+ -0.40017789  0.04278954
+sample estimates:
+mean in group A. callidryas  mean in group A. spurrelli 
+                  0.5833806                   0.7620748 
+
+
+# Figure 5
+```{r}
+library(gridExtra)
+library(cowplot)
+
+#  @ portrait at 7.08661 x 8.26772 max for JEB
+# 4x8.5 portrait looks good
+
+Figure5 = plot_grid(amplitude_loss_plot1, amplitude_loss_prop_plot1, labels = "AUTO", label_x = -.01, label_y = 1, scale =1, ncol=1, nrow = 2, label_size = 12, align = "v")
+Figure5
+# @3.46 x 6
+```
+
+
+
+*****************************************************************************************************************
+
+
+
+
+# Egg-Transplant Egg-Predation Trials
+```{r}
+library(readxl)
+transplant <- read_excel("~/Desktop/Publications/Manuscripts/In Prep/Comparative Egg Clutch Biomechanics/Comparative Egg Clutch Biomechanics.xlsx", 
+    sheet = "Egg-Transplant Predation Trials", na = "NA")
+transplant
+```
+
+Summarize only by treatment
+```{r}
+library(dplyr)
+transplant_summary = transplant %>% 
+  group_by(Species,Treatment) %>%
+summarise(mean_escape_success = mean(Escape_Success, na.rm=T), SE= sd(Escape_Success, na.rm=T)/sqrt(length(Escape_Success)), SD = sd(Escape_Success, na.rm=T), min= min(Escape_Success, na.rm=T), max= max(Escape_Success, na.rm=T), sample_size=n())
+transplant_summary
+
+#Number available to hatch per species
+transplant_summary2 = transplant %>% 
+  group_by(Species,Treatment) %>%
+summarise(mean_avail_to_hatch = mean(Number_Available_to_Hatch, na.rm=T), SE= sd(Number_Available_to_Hatch, na.rm=T)/sqrt(length(Number_Available_to_Hatch)), SD = sd(Number_Available_to_Hatch, na.rm=T), min= min(Number_Available_to_Hatch, na.rm=T), max= max(Number_Available_to_Hatch, na.rm=T), sample_size=n())
+transplant_summary2
+```
+
+
+
+
+## Figure 6
+
+Escape Success Summarized Reaction Norm
+```{r}
+library(ggplot2)
+library(scales)
+
+#This shows reaction norms across clutch effects —i.e. sibship effect
+
+# Figure S2
+
+mean_escape_success = ggplot(transplant, aes(x=Treatment, y=Escape_Success)) + #add the axis
+  geom_boxplot(aes(color=Treatment), outlier.shape = NA, fill = NA) + 
+  geom_line(aes(group=Clutch), size = 1, position = position_jitter(width = 0.25, seed = 123), alpha=0.4) +
+  geom_point(aes(color=Treatment, fill= Treatment), position = position_jitter(width = 0.25, seed = 123), color = "black", pch=21) +
+  labs(y="Escape success (Proportion hatched)", x=element_blank()) + #create labels... 
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), strip.text = element_text(face = "italic")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + 
+  scale_color_manual(values = c("darkgreen", "darkgreen","darkorange3")) +
+  scale_fill_manual(values = c("darkgreen", "darkgreen","darkorange3")) +
+  geom_text(aes(y= .9, x = 1.5, label= "***"), color= "gray", vjust = 0, size = 4) + #add significance star/astrix 
+  geom_segment(aes(x = 1, y = .9, xend = 2, yend = .9), color="gray", size = .25) +# add line segment 
+  facet_grid(~factor(Species, levels=c('A. spurrelli','A. callidryas')), scales = "free")
+mean_escape_success
+```
+
+Figure 5
+```{r}
+#This shows reaction norms across egg mass effects —i.e. physical structure effect
+transplant_sorted <-
+  transplant %>%
+  arrange(Egg_Mass, Treatment)
+
+mean_escape_successV2 = ggplot(transplant, aes(x=Treatment, y=Escape_Success)) + #add the axis
+  geom_boxplot(aes(color=Treatment), outlier.shape = NA, fill = NA) + 
+  geom_line(data=transplant_sorted, aes(group=Egg_Mass), size = 1, position = position_jitter(width = 0.25, seed = 123), alpha=0.4) +
+  geom_point(aes(color=Treatment, fill= Treatment), position = position_jitter(width = 0.25, seed = 123), color = "black", pch=21) +
+  labs(y="Escape success (Proportion hatched)", x=element_blank()) + #create labels... 
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), strip.text = element_text(face = "italic")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=6)) + 
+  scale_color_manual(values = c("darkgreen", "darkgreen","darkorange3")) +
+  scale_fill_manual(values = c("darkgreen", "darkgreen","darkorange3")) +
+  geom_text(aes(y= .9, x = 1.5, label= "***"), color= "gray", vjust = 0, size = 4) + #add significance star/astrix 
+  geom_segment(aes(x = 1, y = .9, xend = 2, yend = .9), color="gray", size = .25) +# add line segment 
+  facet_grid(~factor(Species, levels=c('A. spurrelli','A. callidryas')), scales = "free")
+mean_escape_successV2
+
+#3x3 looks good in PDF
+```
+
+## STATS
+
+prep dataset
+```{r}
+transplant2 = transplant %>%
+  mutate(Treatmentfortest = case_when(Treatment == "Transplanted" ~ "Transplanted", Treatment == "Non-transplanted control" ~ "Control", Treatment == "aTransplant host control" ~ "Control"))
+transplant2
+```
+
+
+
+All together
+```{r}
+library(car)
+#all models
+eggpredation_full = glmer(Escape_Success~Treatmentfortest*Species +  (1|Clutch) , family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+eggpredation_nointeraction = glmer(Escape_Success~Species+Treatmentfortest +  (1|Clutch), family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+eggpredation_nospecies = glmer(Escape_Success~Treatmentfortest +  (1|Clutch), family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+eggpredation_notreatment = glmer(Escape_Success~Species +  (1|Clutch), family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+
+
+eggpredation_full2 = glmer(Escape_Success~Species*Treatmentfortest +  (1|Clutch) +(1|Egg_Mass) , family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+
+eggpredation_full3 = glmer(Escape_Success~Species*Treatmentfortest +  (1|Egg_Mass) , family="binomial", weights = Number_Available_to_Hatch, data = transplant2)
+
+
+#AIC model comparison
+library(AICcmodavg)
+print(aictab(list(eggpredation_full3, eggpredation_full2, eggpredation_full,  eggpredation_nointeraction, eggpredation_nospecies, eggpredation_notreatment), c("eggpredation_full3", "eggpredation_full2", "eggpredation_full", "eggpredation_nointeraction", "eggpredation_nospecies", "eggpredation_notreatment")), LL = FALSE)
+
+plot(fitted(eggpredation_full), residuals(eggpredation_full))
+hist(residuals(eggpredation_full))
+qqnorm(residuals(eggpredation_full))
+qqline(residuals(eggpredation_full))
+shapiro.test(residuals(eggpredation_full))
+
+summary(eggpredation_full)
+Anova(eggpredation_full)
+```
+
+Analysis of Deviance Table (Type II Wald chisquare tests)
+
+Response: Escape_Success
+                           Chisq Df Pr(>Chisq)    
+Species                  73.4010  1  < 2.2e-16 ***
+Treatmentfortest         31.6772  1  1.821e-08 ***
+Species:Treatmentfortest  5.5458  1    0.01852 *  
+
+
+Likelihood ratio tests
+```{r}
+anova(eggpredation_full, eggpredation_nointeraction, test = "Chisq")
+anova(eggpredation_full, eggpredation_nospecies, test = "Chisq")
+anova(eggpredation_full, eggpredation_notreatment, test = "Chisq")
+```
+
+EFFECT OF INTERACTION:
+* **X = 5.3423; p-value = 0.02081 **
+
+EFFECT OF SPECIES:
+* **X = 52.917; p-value = 3.23e-12 **
+
+EFFECT OF TREATMENT:
+* **X = 33.124; p-value = 6.416e-08 **
+
+
+
+##### Posthoc analyses
+```{r}
+
+# within excitation type comparisons
+library(emmeans)
+emms=emmeans(eggpredation_full, ~Treatmentfortest|Species) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+
+#within species comparisons
+emms=emmeans(eggpredation_full, ~Species|Treatmentfortest) #, adjust="Bonferoni"
+pairs(emms, interaction = "pairwise") %>% rbind(adjust="fdr")
+```
+
+*Within Excitation Type Comparisons*
+Treatmentfortest Species_pairwise             estimate    SE  df z.ratio p.value
+ Control          A. callidryas - A. spurrelli     2.93 0.338 Inf   8.672  <.0001
+ Transplanted     A. callidryas - A. spurrelli     1.97 0.389 Inf   5.069  <.0001
+
+Results are given on the log odds ratio (not the response) scale. 
+P value adjustment: fdr method for 2 tests 
+
+
+*Within Species Comparisons*
+  Species       Treatmentfortest_pairwise estimate    SE  df z.ratio p.value
+ A. callidryas Control - Transplanted      -0.656 0.294 Inf  -2.232  0.0256
+ A. spurrelli  Control - Transplanted      -1.615 0.284 Inf  -5.693  <.0001
+
+Results are given on the log odds ratio (not the response) scale. 
+P value adjustment: fdr method for 2 tests 
+
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+
+
+# MCH Jiggling Trials - Decapsulated vs Control
+```{r}
+library(readxl)
+jelly <- read_excel("~/Desktop/Publications/Manuscripts/In Prep/Comparative Egg Clutch Biomechanics/Comparative Egg Clutch Biomechanics.xlsx", 
+    sheet = "MCH Jiggling Trials", na = "NA")
+
+jelly
+```
+
+##Proportion Hatched
+
+Summarize proportion data
+```{r}
+library(dplyr)
+proportion_hatched = jelly %>%
+  group_by(Treatment) %>%
+  count(Hatched) %>% 
+  mutate(prop = n/105) %>%
+  filter(Hatched == "Hatched")
+proportion_hatched
+```
+
+### Figure
+
+Proportion hatched
+```{r}
+library(ggplot2)
+library(dplyr)
+
+proportion_hatched_summary = jelly %>%
+  group_by(Treatment, Clutch) %>%
+  count(Hatched) %>% 
+  mutate(prop = ifelse(Hatched == "Hatched", n/3, 0)) %>%
+  filter(Hatched == "Hatched" | Hatched == "Not hatched" & n == 3)
+proportion_hatched_summary
+
+
+proportion_hatched3=ggplot(proportion_hatched_summary, aes(y=prop, x=Treatment)) +
+  lemon::geom_pointpath(aes(fill=Treatment, group=Clutch), position = position_jitter(width = .2, height = .05), size=2.5,  shorten = F, distance=0, color="black", pch=21) +
+  labs(y="Proportion hatched") + #creat labels... 
+  theme_classic(base_size = 9) +
+  theme(legend.position="none", axis.title.y = element_text(size = 9), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black"), axis.title.x = element_blank(), axis.text.x = element_blank()) +
+  scale_y_continuous(breaks= c(0,.33,.67,1) ) + # allows for making "pretty" breaks on y axis... shows 5 breaks
+  scale_fill_manual(values = c("darkgreen", "dimgray")) +
+  geom_text(aes(y= 1.1, x = 1.5, label= "***"), color= "gray", vjust = 0, size = 4) + #add significance star/astrix 
+  geom_segment(aes(x = 1, y = 1.1, xend = 2, yend = 1.1), color="gray", size = .25) # add line segment 
+proportion_hatched3
+```
+
+
+### STATS
+```{r}
+prop.test(x=c(53,105), n=c(88,105))
+```
+
+
+2-sample test for equality of proportions with continuity correction
+
+data:  c(53, 105) out of c(88, 105)
+*X-squared = 48.368, df = 1, p-value = 3.532e-12*
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.5104287 -0.2850258
+sample estimates:
+   prop 1    prop 2 
+0.6022727 1.0000000 
+
+
+t-test
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+
+m = lm(prop~Treatment, data = proportion_hatched_summary)
+
+summary(m)
+Anova(m)
+
+#Check for normality assumptions
+#homogeneity of variance assumption
+plot(fitted(m), residuals(m))
+leveneTest(prop~Treatment, data = proportion_hatched_summary)
+#normality assumption
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+
+wilcox.test(prop~Treatment, data = proportion_hatched_summary)
+```
+Shapiro-Wilk normality test
+
+data:  residuals(m)
+W = 0.83365, p-value = 1.445e-06
+
+Wilcoxon rank sum test with continuity correction
+
+data:  prop by Treatment
+*W = 306.5, p-value = 0.0001006*
+alternative hypothesis: true location shift is not equal to 0
+
+
+
+
+
+
+## Proportion Attempted to Hatch
+
+Summarize proportion data
+```{r}
+library(dplyr)
+proportion_attmpted_hatched = jelly %>%
+  group_by(Treatment) %>%
+  count(Attempted_to_Hatch) %>% 
+  mutate(prop = n/105)
+proportion_attmpted_hatched
+```
+68 embryos attempted to hatch in control treatment
+88 attempted to hatch (and succedded, as above) in de-jelied treatment
+
+### STATS
+```{r}
+prop.test(x=c(68,105), n=c(88,105))
+```
+
+
+2-sample test for equality of proportions with continuity correction
+
+data:  c(68, 105) out of c(88, 105)
+*X-squared = 24.232, df = 1, p-value = 8.54e-07*
+alternative hypothesis: two.sided
+95 percent confidence interval:
+ -0.3252740 -0.1292715
+sample estimates:
+   prop 1    prop 2 
+0.7727273 1.0000000 
+
+
+t-test
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+proportion_attempted_to_hatch_summary = jelly %>%
+  group_by(Treatment, Clutch) %>%
+  count(Attempted_to_Hatch) %>% 
+  mutate(prop_attemp = ifelse(Attempted_to_Hatch == 1, n/3, 0)) %>%
+  filter(Attempted_to_Hatch == 1 | Attempted_to_Hatch == 0 & n == 3)
+proportion_attempted_to_hatch_summary
+
+m = lm(prop_attemp~Treatment, data = proportion_attempted_to_hatch_summary)
+
+summary(m)
+Anova(m)
+
+#Check for normality assumptions
+#homogeneity of variance assumption
+plot(fitted(m), residuals(m))
+leveneTest(prop_attemp~Treatment, data = proportion_attempted_to_hatch_summary)
+#normality assumption
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+
+wilcox.test(prop_attemp~Treatment, data = proportion_attempted_to_hatch_summary)
+```
+Shapiro-Wilk normality test
+
+data:  residuals(m)
+W = 0.79943, p-value = 2.309e-08
+
+Wilcoxon rank sum test with continuity correction
+
+data:  prop_attemp by Treatment
+*W = 377, p-value = 0.002168*
+alternative hypothesis: true location shift is not equal to 0
+
+
+
+*****************************************************************************************************************
+*****************************************************************************************************************
+*****************************************************************************************************************
+
+## Hatching Complications
+```{r}
+proportion_hatchcomplication = jelly %>%
+  group_by(Treatment) %>%
+  count(Hatching_Complication)
+proportion_hatchcomplication
+
+prop.test(x=c(0,105), n=c(15,105))
+```
+15/105 control (14.3%)  had issues while 0 dejellied had issues
+
+
+
+## Latency to Hatch
+
+Latency to hatch RAW
+
+Summarize
+```{r}
+library(dplyr)
+
+jelly_summary = jelly %>% 
+  group_by(Treatment, Clutch) %>%
+  filter(Clutch != 49, Clutch != 54, Clutch != 57 , Clutch != 112 , Clutch != 165 , Clutch != 167 , Clutch != 169 , Clutch != 174) %>% # this is getting rid of clutches without both jellied and control values
+summarise(mean_latency = mean(Latency_min, na.rm=T), SE= sd(Latency_min, na.rm=T)/sqrt(length(Latency_min)), SD = sd(Latency_min, na.rm=T), min= min(Latency_min, na.rm=T), max= max(Latency_min, na.rm=T), sample_size=n()) %>%
+  filter(mean_latency != "NaN")
+jelly_summary
+
+jelly_summary2 = jelly %>% 
+  group_by(Treatment) %>%
+  filter(Clutch != 49, Clutch != 54, Clutch != 57 , Clutch != 112 , Clutch != 165 , Clutch != 167 , Clutch != 169 , Clutch != 174) %>% # this is getting rid of clutches without both jellied and control values
+summarise(mean_latency = mean(Latency_min, na.rm=T), SE= sd(Latency_min, na.rm=T)/sqrt(length(Latency_min)), SD = sd(Latency_min, na.rm=T), min= min(Latency_min, na.rm=T), max= max(Latency_min, na.rm=T), sample_size=n()) %>%
+  filter(mean_latency != "NaN")
+
+jelly_summary2
+
+jelly_summary3 = jelly %>% 
+  group_by(Clutch) %>%
+  filter(Clutch != 49, Clutch != 54, Clutch != 57 , Clutch != 112 , Clutch != 165 , Clutch != 167 , Clutch != 169 , Clutch != 174) %>% # this is getting rid of clutches without both jellied and control values
+summarise(mean_latency = mean(Latency_min, na.rm=T), SE= sd(Latency_min, na.rm=T)/sqrt(length(Latency_min)), SD = sd(Latency_min, na.rm=T), min= min(Latency_min, na.rm=T), max= max(Latency_min, na.rm=T), sample_size=n()) %>%
+  filter(mean_latency != "NaN")
+jelly_summary3
+```
+
+### Figure
+
+Latency Summarized Reaction Norm
+```{r}
+library(ggplot2)
+library(scales)
+mean_latency = ggplot(jelly_summary, aes(x=Treatment, y=mean_latency)) + #add the axis
+  geom_errorbar(aes(ymin=mean_latency-SE, ymax=mean_latency+SE, group=Clutch), position=position_dodge(.3), width= .5, size= .25, color = "black") + 
+  geom_line(aes(group=Clutch), size = 1, position = position_dodge(.3), alpha=0.4 ) +
+  geom_point(aes(color=Treatment, fill= Treatment, group=Clutch), position = position_dodge(.3), size = 2.5, color = "black", pch=21) +
+  labs(y="Latency to hatch (min)", x=element_blank()) + #create labels... 
+  theme_classic(base_size=9) +
+  theme(legend.text = element_text(size = 9), legend.title = element_blank(), legend.background = element_blank(), axis.text = element_text(color="black", size = 9), axis.ticks = element_line(color = "black")) +
+  theme(legend.title.align=0.5, legend.justification = c(0,.5), legend.position= "none") +
+  scale_y_continuous(breaks= pretty_breaks(n=5)) + 
+  scale_color_manual(values = c("darkgreen", "dimgray")) +
+  scale_fill_manual(values = c("darkgreen", "dimgray")) +
+  scale_color_brewer(palette = "Set2") +
+  geom_text(aes(y= 6, x = 1.5, label= "***"), color= "gray", vjust = 0, size = 4) + #add significance star/astrix 
+  geom_segment(aes(x = 1, y = 6, xend = 2, yend = 6), color="gray", size = .25) # add line segment 
+mean_latency
+
+#3x3 looks good in PDF
+```
+
+### STATS
+```{r}
+library(lme4)
+library(car)
+library(lmerTest)
+
+jellypaired = jelly %>%
+    filter(Clutch != 49, Clutch != 54, Clutch != 57 , Clutch != 112 , Clutch != 165 , Clutch != 167 , Clutch != 169 , Clutch != 174) # this is getting rid of clutches without both jellied and control values
+jellypaired
+
+m = lm(Latency_min~Treatment, data = jellypaired)
+
+summary(m)
+Anova(m)
+
+#Check for normality assumptions
+#homogeneity of variance assumption
+plot(fitted(m), residuals(m))
+leveneTest(Latency_min~Treatment, data = jellypaired)
+#normality assumption
+hist(residuals(m))
+qqnorm(residuals(m))
+qqline(residuals(m))
+shapiro.test(residuals(m))
+
+
+wilcox.test(Latency_min~Treatment, data = jellypaired)
+```
+
+Shapiro-Wilk normality test
+
+data:  residuals(m)
+W = 0.82758, p-value = 1.089e-10
+
+
+Wilcoxon rank sum test with continuity correction
+
+data:  Latency_min by Treatment
+*W = 2452.5, p-value = 5.074e-05*
+alternative hypothesis: true location shift is not equal to 0
+
+
+# Figure 7
+```{r}
+library(gridExtra)
+library(cowplot)
+
+#  @ portrait at 7.08661 x 8.26772 max for JEB
+# 4x8.5 portrait looks good
+
+Figure6 = plot_grid(proportion_hatched3, mean_latency, labels = "AUTO", label_x = -.01, label_y = 1, scale =1, ncol=1, nrow = 2, label_size = 12, align = "v")
+Figure6
+
+# @ 3.46 x 6
+```
+
