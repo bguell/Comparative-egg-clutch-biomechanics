@@ -2,7 +2,7 @@
 
 **INTRODUCTION**
 
-This repository contains raw data, recordings, scripts, and code associated with the manuscript entitled "Egg-clutch biomechanics affect escape-hatching behavior and performance" submitted to Integrative Organismal Biology. The full citation for the manuscript will be included here upon publication.
+This repository contains raw data, recordings, scripts, and code associated with the manuscript entitled "Egg-clutch biomechanics affect escape-hatching behavior and performance" submitted to Integrative Organismal Biology — IOB-2023-040. The full citation for the manuscript will be included here upon publication.
 
 **Abstract**
 
