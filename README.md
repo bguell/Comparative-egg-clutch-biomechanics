@@ -2,7 +2,9 @@
 
 **INTRODUCTION**
 
-This repository contains raw data, recordings, scripts, and code associated with the manuscript entitled "Egg-clutch biomechanics affect escape-hatching behavior and performance". The citation for this publication is as follows:
+This repository contains raw data, recordings, scripts, and code associated with the manuscript entitled "Egg-clutch biomechanics affect escape-hatching behavior and performance". 
+
+The citation for this publication is as follows:
 B A Güell, J G McDaniel, K M Warkentin, Egg-Clutch Biomechanics Affect Escape-Hatching Behavior and Performance, Integrative Organismal Biology, Volume 6, Issue 1, 2024, obae006, https://doi.org/10.1093/iob/obae006
 
 **Abstract**
